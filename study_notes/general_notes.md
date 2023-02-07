@@ -199,28 +199,6 @@ How to find the mount options, since it's not in `man stratis`
   - PASS_MAX_DAYS   90
   - PASS_MIN_DAYS   15
   - PASS_WARN_AGE   7
-- You can change `pwquality.conf` without changing authselect
-
-- Anything outside of these parameters needs to be addressed using `authselect`
-- `authselect` is where you start
-- `authselect list` shows the available profiles
-- `authselect current` shows the current profile
-- `authselect select sssd --force` will select sssd for the first time, since it needs to overwrite the files
-- `authselect check`
-- Get your authselect shit together, and then set the quality bits in `/etc/security/pwquality.conf`
-- It's all right here: https://access.redhat.com/solutions/5027331
-- Update this help doc with steps...
-
-Steps for doing an out-of-the-box config on the password policy:
-```
-authselect select sssd --force
-authselect apply-changes -b --backup=sssd.backup
-authselect create-profile password-policy -b sssd
-authselect select custom/password-policy
-authselect current
-vi /etc/security/pwquality.conf
-authselect apply-changes
-```
 
 ### SSH Security
 - Configure it in `/etc/ssh/sshd_conf`
