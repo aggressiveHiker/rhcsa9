@@ -15,3 +15,12 @@ This is a general layout of how to build the lab and prep the servers for attemp
 
 ## Exam Prep
 This area has my practice task list. It currently has tasks only, and no solutions. I'll work on getting the solutions in there. Don't look at this as a "practice test", as the list of tasks here is considerably longer than what is required for the RHCSA exam. The task list is designed to cover every exam objective for the RHCSA 9 exam.
+
+---
+
+### Resources / References / Acknowledgements
+A quick shoutout to everywhere I got info from:
+- https://github.com/rdbreak/rhcsa8env
+- https://github.com/soficx/rhcsa
+- https://app.slack.com/client/TGTE0EB5Z/CHCHPFYQ4
+- https://acloudguru.com/course/red-hat-certified-system-administrator-ex200-exam-prep (Tom Dean and Ross Brunson)
