@@ -4,7 +4,7 @@ This area contains a practice task list consisting of 43 tasks that cover every 
 - ordered_task_list.md
 
 ### Solutions
-There is not yet a write-up of solutions, but it is forthcoming.
+A solutions guide is in progress under solutions_ordered_task_list.md
 
 ### Exam Objective Mapping
 The intent of objective_based_task_list.md is to show the mapping between exam objectives and tasks. It is currently in-progress and should be ignored.
