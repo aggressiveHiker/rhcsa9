@@ -1,5 +1,6 @@
-Note: This file is in progress. It's better to use the ordered_task_list.md in conjunction with system_info.md
-# Task List for Run-Through
+# Objective-Based Task List
+
+This task list is for mapping exam objectives to tasks. It is currently in progress and should be ignored.
 
 ## Exam Objectives
 

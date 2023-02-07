@@ -8,15 +8,32 @@
   - 1 Local Host for machine and other server access
 - OS: RHEL 9.0 Minimal Install
 
-## Repos
-Host the repos under:
+## Repo Setup
+Follow dvd_based_repo_creation.md to setup the repos.
+
+Repos will be hosted under:
 ```
 http://<ip_address>/repo/BaseOS/
 http://<ip_address>/repo/AppStream/
+```
+Server Location:
+```
+/var/www/html/repo/BaseOS
+/var/www/html/repo/AppStream
 ```
 
 ## Containerfile
 Host the Containerfile under:
 ```
 http://<ip_address>/containers/Containerfile
+```
+Server Location:
+```
+/var/www/html/containers/Containerfile
+```
+## Resetting the Server
+To reset the server between exam sessions, you should repermission the NFS shares that have been tweaked during the exam tasks:
+```
+chown -R root:root /export/{dba_files,it_files}
+chmod -R -st,g-w,o+rx /export/{dba_files,it_files}
 ```

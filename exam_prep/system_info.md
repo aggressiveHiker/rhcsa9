@@ -22,4 +22,7 @@
 - http://192.168.55.47/repo/BaseOS/
 - http://192.168.55.47/repo/AppStream/
 - https://download-ib01.fedoraproject.org/pub/fedora/linux/releases/37/Everything/x86_64/os/
-- Only use the Fedora Repo for packages unavailable on BaseOS or AppStream
+  - Only use the Fedora repo for packages unavailable on BaseOS or AppStream
+  - The only thing on the task list that the Fedora repo is required for is to install "star" (Unique Standard Tape Archiver)
+  - You can leave the Fedora repo disabled and only point to it for the one installation. If your repo ID is "F37", you would run the following command:
+  - `dnf install -y star --repo F37`
