@@ -2,6 +2,8 @@
 ## Commands to remember
 ### General "Getting Around" Commands
 - Show the ip address with `ip address show` or `ip a s`
+  - With all `ip` commands, the default is `show`, so `ip a` is the same as `ip address show`, and `ip r` is the same as `ip route show`.
+  - You can also add colors with the `-c` option for easier readability, such as `ip -c a` or `ip -c r`
 - Know the difference between `sudo` and `su`
     - `sudo` stands for "Super User DO" and `su` stands for "Substitute User"
     - `sudo` elevates to root and runs a single command with the current user's password
@@ -298,7 +300,6 @@ podman run -d -p 8000:8080 registry.access.redhat.com/rhscl/httpd-24-rhel7
 
 podman ps
 firewall-cmd --add-port=8000/tcp
-ip a s
 curl http://127.0.0.1:8000
 podman stop -a
 podman ps -a
