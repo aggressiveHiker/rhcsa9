@@ -3,12 +3,12 @@
 - `systemctl get-default` will show you the default boot target
   - `multi-user.target` is the CLI-only boot environment
   - You can find the complete list of targets at `ls /usr/lib/systemd/system/*.target`
-- The "correct?" way to reboot is `systemctl reboot`
-- I prefer `shutdown -r +0`
+- The official way to reboot is `systemctl reboot`
+- Likewise, shutdown with `systemctl poweroff`
 
 ### Setting verbose messages
 - Remove `rhgb quiet` from /etc/default/grub
-- Run `grub2-mkconfig`
+- Run `grub2-mkconfig -o /boot/grub2/grub.cfg`
 
 ### Breaking into the machine
 - While at the grub screen, press `e` to break the sequence. This will take you into "edit" mode.
