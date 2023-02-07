@@ -6,8 +6,8 @@ This shows all of the steps I took for completing each task while preparing for 
 1. Break into server2 and set the password as `password`. Set the target as multi-user and make sure it boots into that automatically. Reboot to confirm.
 ```
 Solution:
-### While booting into server2, when the GRUB menu screen appears, press the "down"
-### arrow to select the rescue kernel, and then press `e` to enter edit mode.
+### While booting into server2, when the GRUB menu screen appears, press the "down" arrow
+### to select the rescue kernel, and then press `e` to enter edit mode.
 
 ### Append to the end of the line beginning with `linux`
 systemd.unit=multi-user.target rd.break enforcing=0
