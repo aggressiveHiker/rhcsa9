@@ -22,6 +22,9 @@ Server Location:
 /var/www/html/repo/AppStream
 ```
 
+## NFS Setup
+Follow nfs_setup.md to setup the NFS server. This will host both regular NFS and autofs for the user profiles.
+
 ## Containerfile
 Host the Containerfile under:
 ```
