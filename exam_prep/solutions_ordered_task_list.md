@@ -123,7 +123,7 @@ scp /etc/yum.repos.d/local.repo root@192.168.55.72:/etc/yum.repos.d/
 ```
 Solution:
 ### On both servers:
-dnf install -y autofs
+dnf install -y nfs-utils autofs
 systemctl enable --now autofs
 mkdir /mnt/autofs_home
 
@@ -170,12 +170,100 @@ marcia:1013:it_staff,it_managers
 jan:1014:dba_admin,dba_staff
 cindy:1015:dba_intern,dba_staff
 ```
+Solution:\
+On server1, create a text file called "grouplist.txt" that contains the following:
+```
+dba_admin:5010
+dba_managers:5011
+dba_staff:5012
+dba_intern:5013
+it_staff:5014
+it_managers:5015
+```
+Then create a shell script called "creategroup.sh" that contains the following:\
+Note: "IFS" is internal field separator, and will separate the group names from the group IDs.
+```
+#!/bin/bash
+
+while IFS=":" read group gid ; do
+echo "Creating group $group..."
+groupadd -g $gid $group
+done < grouplist.txt
+```
+Set the permissions on the file so it's executable, then run it:
+```
+chmod +x creategroup.sh
+./creategroup.sh
+```
+Now check that the groups were created:
+```
+egrep "it|dba" /etc/group
+```
+Now that the groups are created, create a text file called "userlist.txt" that contains the following:\
+Note: Remember that "cindy" is being created differently, so needs to be omitted.
+```
+manny:1010:dba_admin,dba_managers,dba_staff
+moe:1011:dba_admin,dba_staff
+jack:1012:dba_intern,dba_staff
+marcia:1013:it_staff,it_managers
+jan:1014:dba_admin,dba_staff
+```
+Create a shell script called "createuser.sh" that contains the following:\
+Note: Here we still use the IFS, and we specify the home path with `-b`, the auxilary groups with `-G` and not to create a home directory with `-M`.
+```
+#!/bin/bash
+
+while IFS=":" read user uid group ; do
+echo "Creating user $user..."
+useradd -b /mnt/autofs_home -G $group -u $uid -M $user
+done < userlist.txt
+```
+Set the permissions on the file so it's executable, then run it:
+```
+chmod +x createuser.sh
+./createuser.sh
+```
+Check to make sure the users were created and added to the appropriate groups:
+```
+tail /etc/passwd
+egrep "it|dba" /etc/group
+```
+Finally, create "cindy" as a one-off user with a local profile:
+```
+useradd -u 1015 -G dba_intern,dba_staff cindy
+```
 
 12. Secure copy the shell scripts to server2 and perform the same functions.
+```
+Solution:
+scp create* root@192.168.55.72:/root/
+scp *.txt root@192.168.55.72:/root/
+
+### Now on server2:
+./creategroup.sh
+./createuser.sh
+useradd -u 1015 -G dba_intern,dba_staff cindy
+```
 
 13. Set the password on all of the newly created users to `dbapass`.
+```
+Solution:
+### On both servers:
+
+for user in manny moe jack marcia jan cindy; do echo "dbapass" | passwd --stdin $user; done
+```
 
 14. Create sudo command alias for `MESSAGES` with the command `/bin/tail -f /var/log/messages`
+```
+Solution:
+
+visudo
+
+### While in visudo, add the following lines:
+
+## Messages
+Cmnd_Alias MESSAGES = /bin/tail -f /var/log/messages
+```
 
 15. Enable superuser privileges according to the following:
 ```
@@ -183,31 +271,179 @@ dba_managers: everything
 dba_admin: SOFTWARE, SERVICES, PROCESSES
 dba_intern: MESSAGES
 ```
+```
+Solution:
+
+visudo
+
+### While in visudo, uncomment the following lines:
+
+Cmnd_Alias SOFTWARE = /bin/rpm, /usr/bin/up2date, /usr/bin/yum
+Cmnd_Alias SERVICES = /sbin/service, /sbin/chkconfig, /usr/bin/systemctl start....
+Cmnd_Alias PROCESSES = /bin/nice, /bin/kill, /usr/bin/kill, /usr/bin/killall
+
+### Then add the following to the mapping section, after %wheel%:
+
+%dba_managers  ALL=(ALL)       ALL
+%dba_admin     ALL = SOFTWARE, SERVICES, PROCESSES
+%dba_intern    ALL = MESSAGES
+```
 
 16. Switch to the various users using `su` and test their privileges.
+```
+Solution:
+### manny is a dba_manager, so he should have all rights:
+su - manny
+sudo -i
+### If he can elevate, it works
+
+### moe is a dba_admin, but not a dba_manager:
+su - moe
+sudo -i (this should fail)
+sudo yum install tree (don't confirm, but this should work)
+
+### jack is a dba_intern, but not a dba_admin or dba_manager:
+su - jack
+sudo -i (this should fail)
+sudo yum install tree (this should fail)
+sudo tail -f /var/log/messages
+
+### marcia is not a member of any elevated groups:
+su - marcia
+sudo -i (this should fail)
+sudo yum install tree (this should fail)
+sudo tail -f /var/log/messages (this should fail)
+```
 
 17. On server1 create a tar w/gzip archive of /etc called etc_archive.tar.gz in the /archives directory.
+```
+Solution:
+dnf install -y tar gzip
+tar -czvf /archives/etc_archive.tar.gz /etc
+```
 
 18. On server1 create a star w/bzip2 archive of /usr/share/doc called doc_archive.star.bz2 in the /archives directory.
+```
+Solution:
+dnf install -y star --repo F37
+dnf install -y bzip2
+star -c -v -j file=/archives/doc_archive.star.bz2 /usr/share/doc
+```
 
 19. On server1 create a folder called /links, and under links create a file called file01. Create a soft link called file02 pointing to file01, and a hard link called file03 pointing to file01. Check your work.
+```
+Solution:
+mkdir /links
+touch /links/file01
+ln -s /links/file01 /links/file02
+ln /links/file01 /links/file03
+ls -lai /links
+```
 
 20. Find all setuid files on server1 and save the list to /root/suid.txt.
+```
+Solution:
+find / -perm -u+s > /root/suid.txt 2>/dev/null
+cat suid.txt
+```
 
 21. Find all files larger than 3MB in the /etc directory on server1 and copy them to /largefiles.
+```
+Solution:
+mkdir /largefiles
+find /etc -type f -size +3M -exec cp {} /largefiles \; 2>/dev/null
+ls -al /largefiles/
+```
 
 22. On both servers persistently mount `/export/dba_files` from the server 192.168.55.47 under `/mnt/dba_files`. Ensure manny is the user owner and dba_staff is the group owner. Ensure the groupID is applied to newly created files. Ensure users can only delete files they have created. Ensure only members of the dba_staff group can access the directory.
+```
+Solution:
+mkdir /mnt/dba_files
+vi /etc/fstab
+
+### Add the following line to /etc/fstab:
+192.168.55.47:/export/dba_files   /mnt/dba_files  nfs   defaults        0 0
+
+### Write and quit /etc/fstab, then check the mount:
+mount -a
+
+### Set the permissions:
+chown manny:dba_staff /mnt/dba_files
+chmod 770 /mnt/dba_files
+chmod g+s,+t /mnt/dba_files
+```
 
 23. On both servers persistently mount `/export/it_files` from the server 192.168.55.47 under `/mnt/it_files`. Ensure marcia is the user owner and it_staff is the group owner. Ensure the groupID is applied to newly created files. Ensure users can only delete files they have created. Ensure only members of the it_staff group can access the directory.
+```
+Solution:
+mkdir /mnt/it_files
+vi /etc/fstab
+
+### Add the following line to /etc/fstab:
+192.168.55.47:/export/it_files   /mnt/it_files  nfs   defaults        0 0
+
+### Write and quit /etc/fstab, then check the mount:
+mount -a
+
+### Set the permissions:
+chown marcia:it_staff /mnt/it_files
+chmod 770 /mnt/it_files
+chmod g+s,+t /mnt/it_files
+```
 
 24. Create a job using `at` to write "This task was easy!" to /coolfiles/at_job.txt in 10 minutes.
+```
+Solution:
+dnf install -y at
+systemctl enable --now atd
+
+at now + 10 minutes
+mkdir /coolfiles
+echo "This task was easy!" > /coolfiles/at_job.txt
+#Ctrl-d to exit
+```
 
 25. Create a job using `cron` to write "Wow! I'm going to pass this test!" every Tuesday at 3pm to /var/log/messages.
+```
+Solution:
+vi /etc/crontab
+
+### Add the following line to /etc/crontab
+0 15 * * 2 root echo "Wow! I'm going to pass this test!" >> /var/log/messages
+```
 
 26. Write a script named awesome.sh in the root directory on server1.
     - a) If “me” is given as an argument, then the script should output “Yes, I’m awesome.”
     - b) If “them” is given as an argument, then the script should output “Okay, they are awesome.”
     - c) If the argument is empty or anything else is given, the script should output “Usage ./awesome.sh me|them”
+
+```
+Solution:
+vi /awesome.sh
+```
+Add the following to the file:
+```
+#!/bin/bash
+
+if [ $1 = "me" ] ; then
+    echo "Yes, I'm awesome."
+
+elif [ $1 = "them" ] ; then
+    echo "Okay, they are awesome."
+
+else
+    echo "Usage ./awesome.sh me|them"
+
+fi
+```
+Change the permissions and test it:
+```
+chmod +x /awesome.sh
+/awesome.sh me
+/awesome.sh them
+/awesome.sh everyone
+/awesome.sh
+```
 
 27. Fix the web server on server1 and make sure all files are accessible. Do not make any changes to the web server configuration files. Ensure it's accessible from server2 and the client browser.
 
