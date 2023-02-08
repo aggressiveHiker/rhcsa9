@@ -33,7 +33,7 @@ close
 ### TAR and STAR
 - `star` is not in any of the default RHEL 9 repos. Add the Fedora 37 repo to get it.
 - https://download-ib01.fedoraproject.org/pub/fedora/linux/releases/37/Everything/x86_64/os/
-- Disable the repo right after grabbing star, or you'll start grabbing all kinds of other stuff from it, since everything is newer than what's released with RHEL 9.0.
+- You can leave the Fedora repo disabled and just point to it directly for the package using the repo id. I.e. `dnf install -y star --repo F37`.
 
 ### Documentation Commands
 - man
@@ -73,7 +73,7 @@ Use `top`, `ps`, `nice`, `renice`, and `chrt` to manage priority and scheduling.
 
 ### Repo Management
 - find config values in `man dnf.conf`
-  - If you can't remember `man dnf.conf`, first to `man dnf`, then `G` to go to the end of the doc, and you'll see the reference for `dnf.conf`. Go into `man dnf.conf` and then do `G` to go to the end again. Page up a couple times and you'll see all of the repo options to drop into .repo files
+  - If you can't remember `man dnf.conf`, first to `man -k dnf`, and it will show you all of the listings matching dnf. Go into `man dnf.conf` and then do `G` to go to the end. Page up a couple times and you'll see all of the repo options to drop into .repo files.
 - auto-add a repo with `dnf config-manager --add-repo URL`
 - After the auto-add, you can go and modify the .repo file created
 
@@ -236,7 +236,9 @@ How to find the mount options, since it's not in `man stratis`
 
 ### Time, timezone, NTP, hostname
 - `timedatectl`
+- `/etc/chrony.conf`
 - `hostnamectl`
+- `nmcli general hostname <hostname>`
 
 ### Containers
 - `podman` and `skopeo`
