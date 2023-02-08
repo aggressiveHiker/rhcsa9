@@ -158,7 +158,7 @@ autofs
 ### File Permissions
 
 - `umask` sets the default permissions... it tells you which bits to subtract on newly created files. 0002 says to set 775 on directories and 664 on files. 0022 says to set 755 on directories and 644 on files.
-- Default out of the box is 0022. Change it globally by creating a shell script under `/etc/profile.d/`, set it on a per-user basis by adding it to `~/.bashrc`. Set it for newly created users only under `/etc/skel/.bashrc`.
+- Default out of the box is 0022. Change it globally by creating a shell script under `/etc/profile.d/`, set it on a per-user basis by adding it to `~/.bashrc`. Set it for newly created users only under `/etc/skel/.bashrc`. You can also set it under `/etc/login.defs`.
 - `chmod g+s` is the set-GID bit
 - `chmod u+s` is the set-UID bit
 - `chmod +t` is the sticky bit
@@ -188,8 +188,8 @@ How to find the mount options, since it's not in `man stratis`
 - `lvcreate --type vdo -n web_storage -l 100%FREE -V 30G vdo-vg`
 - Hierarchy is Physical Volume >> Volume Group >> Pool >> VDO Logical Volume
 - `lvcreate` will also create the pool if you don't specify it, much like `vgcreate` will create the physical volume
-- When creating the filesystem on a VDO volume, add the `-E nodiscard` option
-  - `mkfs.ext4 -E nodiscard /dev/vdo-vg/web_storage`, otherwise the discarding of blocks in the overprovisioned volume will take extra time
+- When creating the filesystem on a VDO volume, add the `-K` option
+  - `mkfs.ext4 -K /dev/vdo-vg/web_storage`, otherwise the discarding of blocks in the overprovisioned volume will take extra time
 - `vdostats` will show you what's going on
 
 ### Password Policy
