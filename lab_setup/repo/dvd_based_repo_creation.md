@@ -88,7 +88,7 @@ createrepo_c -v /var/www/html/repo/BaseOS
 createrepo_c -v /var/www/html/repo/AppStream
 ```
 
-## 11. Clean the cache and dheck the repos again
+## 11. Clean the cache and check the repos again
 ```
 dnf clean all
 dnf search httpd --repo BaseOS
