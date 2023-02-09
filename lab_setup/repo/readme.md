@@ -7,14 +7,15 @@
   - 1 NAT for internet access
   - 1 Local Host for machine and other server access
 - OS: RHEL 9.0 Minimal Install
+- IP Address: 192.168.55.47/24
 
 ## Repo Setup
 Follow dvd_based_repo_creation.md to setup the repos.
 
 Repos will be hosted under:
 ```
-http://<ip_address>/repo/BaseOS/
-http://<ip_address>/repo/AppStream/
+http://192.168.55.47/repo/BaseOS/
+http://192.168.55.47/repo/AppStream/
 ```
 Server Location:
 ```
@@ -28,7 +29,7 @@ Follow nfs_setup.md to setup the NFS server. This will host both regular NFS and
 ## Containerfile
 Host the Containerfile under:
 ```
-http://<ip_address>/containers/Containerfile
+http://192.168.55.47/containers/Containerfile
 ```
 Server Location:
 ```
