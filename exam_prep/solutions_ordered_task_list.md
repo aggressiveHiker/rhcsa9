@@ -3,9 +3,9 @@ This file is still in progress...
 
 This shows all of the steps I took for completing each task while preparing for the exam.
 
-1. Break into server2 and set the password as `password`. Set the target as multi-user and make sure it boots into that automatically. Reboot to confirm.
+**1.** Break into server2 and set the password as `password`. Set the target as multi-user and make sure it boots into that automatically. Reboot to confirm.
+#### **Solution to Task 1**
 ```
-Solution:
 ### While booting into server2, when the GRUB menu screen appears, press the "down" arrow
 ### to select the rescue kernel, and then press `e` to enter edit mode.
 
@@ -26,9 +26,9 @@ systemctl set-default multi-user
 systemctl reboot
 ```
 
-2. Configure the network interfaces and hostnames on both servers.
+**2.** Configure the network interfaces and hostnames on both servers.
+#### **Solution to Task 2**
 ```
-Solution:
 ### On server1:
 nmcli con show
 
@@ -54,18 +54,18 @@ nmcli general hostname rhcsa9-server1
 nmcli con show enp0s8
 ```
 
-3. Ensure network services start at boot.
+**3.** Ensure network services start at boot.
+#### **Solution to Task 3**
 ```
-Solution:
 systemctl status NetworkManager
 
 ### Check to see that it's enabled and running. If not, then run
 systemctl enable --now NetworkManager
 ```
 
-4. Enable ssh access for root on both servers.
+**4.** Enable ssh access for root on both servers.
+#### **Solution to Task 4**
 ```
-Solution:
 vi /etc/ssh/sshd_config
 
 ### Change the following line (should be line 40):
