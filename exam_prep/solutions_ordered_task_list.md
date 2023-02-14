@@ -386,7 +386,7 @@ mkdir /mnt/dba_files
 vi /etc/fstab
 
 ### Add the following line to /etc/fstab:
-192.168.55.47:/export/dba_files   /mnt/dba_files  nfs   defaults        0 0
+192.168.55.47:/export/dba_files  /mnt/dba_files  nfs  defaults  0 0
 
 ### Write and quit /etc/fstab, then check the mount:
 mount -a
@@ -405,7 +405,7 @@ mkdir /mnt/it_files
 vi /etc/fstab
 
 ### Add the following line to /etc/fstab:
-192.168.55.47:/export/it_files   /mnt/it_files  nfs   defaults        0 0
+192.168.55.47:/export/it_files  /mnt/it_files  nfs  defaults  0 0
 
 ### Write and quit /etc/fstab, then check the mount:
 mount -a
@@ -440,9 +440,9 @@ vi /etc/crontab
 ```
 
 **26.** Write a script named awesome.sh in the root directory on server1.
-    - a) If “me” is given as an argument, then the script should output “Yes, I’m awesome.”
-    - b) If “them” is given as an argument, then the script should output “Okay, they are awesome.”
-    - c) If the argument is empty or anything else is given, the script should output “Usage ./awesome.sh me|them”
+- a) If “me” is given as an argument, then the script should output “Yes, I’m awesome.”
+- b) If “them” is given as an argument, then the script should output “Okay, they are awesome.”
+- c) If the argument is empty or anything else is given, the script should output “Usage ./awesome.sh me|them”
 
 #### **Solution to Task 26**
 ```
@@ -764,7 +764,7 @@ lvextend -L +500M -r /dev/mapper/platforms_vg-platforms_lv
 
 **36.** On server2, create a 500MiB swap partition on /dev/sdb and mount it persistently.
 
-#### **Solution to Task 35**
+#### **Solution to Task 36**
 First, create a swap partition in fdisk:
 ```
 ### Enter fdisk
@@ -781,7 +781,7 @@ p
 
 ### Press enter to select the first available sector
 
-### +500M for setting the last sector as 2GiB past the first sector
+### +500M for setting the last sector as 500MiB past the first sector
 +500M
 
 ### t to change the partition type
@@ -817,11 +817,140 @@ swapon -a
 swapon
 ```
 
-37. On server2, using the remaining space on /dev/sdb, create a volume group with the name networks_vg.
+**37.** On server2, using the remaining space on /dev/sdb, create a volume group with the name networks_vg.
 
-38. Under the "networks_vg" volume group, create a logical volume with the name networks_lv. Ensure it uses 8 MiB extents. Configure the volume to use 75 extents. Format it with the vfat file system and ensure it mounts persistently on /mnt/networks_lv.
+#### **Solution to Task 37**
+First, create an LVM partition in fdisk:
+```
+### Enter fdisk
+fdisk /dev/sdb
 
-39. On server2, create a 5TB thin-provisioned volume on /dev/sdc called "thin_vol" backed by a pool called "thin_pool" on a 5GB volume group called "thin_vg". Format it as xfs and mount it persistently under /mnt/thin_vol.
+### n for new partition
+n
+
+### p for primary
+p
+
+### 3 for partition number
+3
+
+### Press enter to select the first available sector
+
+### Press enter to select the last sector
+
+### t to change the partition type
+t
+
+### l to list all partition types
+l
+
+### 8e or lvm to select lvm (lvm is an alias for 8e)
+lvm
+
+### w to write and quit
+w
+```
+
+Now, we need to create the volume group, but looking ahead to task 38, it says the logical volume needs to be using 8MiB extents, which we need to configure when we create the volume group:
+```
+vgcreate -s 8M networks_vg /dev/sdb3
+```
+
+**38.** Under the "networks_vg" volume group, create a logical volume with the name networks_lv. Ensure it uses 8 MiB extents. Configure the volume to use 75 extents. Format it with the vfat file system and ensure it mounts persistently on /mnt/networks_lv.
+
+#### **Solution to Task 38**
+```
+### Create the volume
+lvcreate -l 75 -n networks_lv networks_vg
+
+### Install dosfstools and create the file system
+dnf install -y dosfstools
+mkfs.vfat /dev/mapper/networks_vg-networks_lv
+
+### Find the UUID with lsblk
+lsblk -f
+
+### Create the directory
+mkdir /mnt/networks_lv
+
+### Add the UUID to /etc/fstab
+vi /etc/fstab
+
+UUID=<uuid_from_lsblk>  /mnt/networks_lv  vfat  defaults  0 0
+
+### Write and quit, then mount all to check
+mount -a
+mount
+```
+
+**39.** On server2, create a 5TB thin-provisioned volume on /dev/sdc called "thin_vol" backed by a pool called "thin_pool" on a 5GB volume group called "thin_vg". Format it as xfs and mount it persistently under /mnt/thin_vol.
+
+#### **Solution to Task 39**
+For this task, we are using VDO within LVM to create the volume.
+
+First, create the partition for the volume group in fdisk:
+```
+### Enter fdisk
+fdisk /dev/sdc
+
+### n for new partition
+n
+
+### p for primary
+p
+
+### 1 for partition number
+1
+
+### Press enter to select the first available sector
+
+### +5G for setting the last sector as 5GiB past the first sector
++5G
+
+### t to change the partition type
+t
+
+### l to list all partition types
+l
+
+### 8e or lvm to select lvm (lvm is an alias for 8e)
+lvm
+
+### w to write and quit
+w
+```
+
+Then, create the volume group:
+```
+vgcreate thin_vg /dev/sdc1
+```
+
+Install VDO, create the volume, and format it as XFS:
+```
+dnf install -y vdo
+lvcreate --vdo -l 100%FREE -V 5T --name thin_vol thin_vg/thin_pool
+
+### Use the -K flag to prevent the discarding of blocks
+mkfs.xfs -K /dev/mapper/thin_vg-thin_vol
+```
+
+Last, add the volume to /etc/fstab and mount it
+```
+### Find the UUID with lsblk
+lsblk -f
+
+### Create the directory
+mkdir /mnt/thin_vol
+
+### Add the UUID to /etc/fstab
+vi /etc/fstab
+
+UUID=<uuid_from_lsblk>  /mnt/thin_vol  xfs  defaults  0 0
+
+### Write and quit, then mount all to check
+mount -a
+mount
+```
 
 40. On server1, set a merged tuned profile using the the powersave and virtual-guest profiles.
 
