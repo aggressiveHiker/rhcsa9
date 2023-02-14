@@ -4,6 +4,7 @@ This file is still in progress...
 This shows all of the steps I took for completing each task while preparing for the exam.
 
 **1.** Break into server2 and set the password as `password`. Set the target as multi-user and make sure it boots into that automatically. Reboot to confirm.
+
 #### **Solution to Task 1**
 ```
 ### While booting into server2, when the GRUB menu screen appears, press the "down" arrow
@@ -27,6 +28,7 @@ systemctl reboot
 ```
 
 **2.** Configure the network interfaces and hostnames on both servers.
+
 #### **Solution to Task 2**
 ```
 ### On server1:
@@ -55,6 +57,7 @@ nmcli con show enp0s8
 ```
 
 **3.** Ensure network services start at boot.
+
 #### **Solution to Task 3**
 ```
 systemctl status NetworkManager
@@ -64,6 +67,7 @@ systemctl enable --now NetworkManager
 ```
 
 **4.** Enable ssh access for root on both servers.
+
 #### **Solution to Task 4**
 ```
 vi /etc/ssh/sshd_config
@@ -74,9 +78,10 @@ PermitRootLogin yes
 systemctl restart sshd
 ```
 
-5. Enable key-based ssh authentication for root on both servers.
+**5.** Enable key-based ssh authentication for root on both servers.
+
+#### **Solution to Task 5**
 ```
-Solution:
 ### On server1:
 ssh-keygen
 ssh-copy-id root@192.168.55.72
@@ -86,9 +91,10 @@ scp /root/.ssh/* root@192.168.55.72:/root/.ssh
 ssh-copy-id root@192.168.55.71
 ```
 
-6. Configure the repos on server1.
+**6.** Configure the repos on server1.
+
+#### **Solution to Task 6**
 ```
-Solution:
 ### On server1:
 vi /etc/yum.repos.d/local.repo
 
@@ -112,16 +118,18 @@ baseurl=https://download-ib01.fedoraproject.org/pub/fedora/linux/releases/37/Eve
 gpgcheck=0
 ```
 
-7. Secure copy the repo file to server2.
+**7.** Secure copy the repo file to server2.
+
+#### **Solution to Task 7**
 ```
-Solution:
 ### On server1:
 scp /etc/yum.repos.d/local.repo root@192.168.55.72:/etc/yum.repos.d/
 ```
 
-8. Configure autofs to automatically mount individual users' home directories from `/export/home` on 192.168.55.47 to `/mnt/autofs_home/<user_name>`.
+**8.** Configure autofs to automatically mount individual users' home directories from `/export/home` on 192.168.55.47 to `/mnt/autofs_home/<user_name>`.
+
+#### **Solution to Task 8**
 ```
-Solution:
 ### On both servers:
 dnf install -y nfs-utils autofs
 systemctl enable --now autofs
@@ -136,9 +144,10 @@ mkdir /mnt/autofs_home
 systemctl restart autofs
 ```
 
-9. Configure both servers to create files with 660 permissions by default.
+**9.** Configure both servers to create files with 660 permissions by default.
+
+#### **Solution to Task 4**
 ```
-Solution:
 ### On both servers:
 vi /etc/login.defs
 
@@ -146,9 +155,10 @@ vi /etc/login.defs
 UMASK 007
 ```
 
-10. Set password policies to require a minimum of 8 characters and a maximum age of 60 days.
+**10.** Set password policies to require a minimum of 8 characters and a maximum age of 60 days.
+
+#### **Solution to Task 10**
 ```
-Solution:
 ### On both servers:
 vi /etc/login.defs
 
@@ -161,7 +171,7 @@ vi /etc/security/pwquality.conf
 minlen = 8
 ```
 
-11. Write shell scripts on server1 that create users and groups according to the following parameters. Ensure all users except cindy use autofs for their profiles:
+**11.** Write shell scripts on server1 that create users and groups according to the following parameters. Ensure all users except cindy use autofs for their profiles:
 ```
 manny:1010:dba_admin,dba_managers,dba_staff
 moe:1011:dba_admin,dba_staff
@@ -170,7 +180,8 @@ marcia:1013:it_staff,it_managers
 jan:1014:dba_admin,dba_staff
 cindy:1015:dba_intern,dba_staff
 ```
-Solution:\
+
+#### **Solution to Task 11**
 On server1, create a text file called "grouplist.txt" that contains the following:
 ```
 dba_admin:5010
@@ -233,9 +244,10 @@ Finally, create "cindy" as a one-off user with a local profile:
 useradd -u 1015 -G dba_intern,dba_staff cindy
 ```
 
-12. Secure copy the shell scripts to server2 and perform the same functions.
+**12.** Secure copy the shell scripts to server2 and perform the same functions.
+
+#### **Solution to Task 12**
 ```
-Solution:
 scp create* root@192.168.55.72:/root/
 scp *.txt root@192.168.55.72:/root/
 
@@ -245,17 +257,20 @@ scp *.txt root@192.168.55.72:/root/
 useradd -u 1015 -G dba_intern,dba_staff cindy
 ```
 
-13. Set the password on all of the newly created users to `dbapass`.
+**13.** Set the password on all of the newly created users to `dbapass`.
+
+#### **Solution to Task 13**
 ```
-Solution:
 ### On both servers:
 
 for user in manny moe jack marcia jan cindy; do echo "dbapass" | passwd --stdin $user; done
 ```
 
-14. Create sudo command alias for `MESSAGES` with the command `/bin/tail -f /var/log/messages`
+**14.** Create sudo command alias for `MESSAGES` with the command `/bin/tail -f /var/log/messages`
+
+#### **Solution to Task 14**
 ```
-Solution:
+### On both servers:
 
 visudo
 
@@ -265,14 +280,16 @@ visudo
 Cmnd_Alias MESSAGES = /bin/tail -f /var/log/messages
 ```
 
-15. Enable superuser privileges according to the following:
+**15.** Enable superuser privileges according to the following:
 ```
 dba_managers: everything
 dba_admin: SOFTWARE, SERVICES, PROCESSES
 dba_intern: MESSAGES
 ```
+
+#### **Solution to Task 15**
 ```
-Solution:
+### On both servers:
 
 visudo
 
@@ -289,9 +306,10 @@ Cmnd_Alias PROCESSES = /bin/nice, /bin/kill, /usr/bin/kill, /usr/bin/killall
 %dba_intern    ALL = MESSAGES
 ```
 
-16. Switch to the various users using `su` and test their privileges.
+**16.** Switch to the various users using `su` and test their privileges.
+
+#### **Solution to Task 16**
 ```
-Solution:
 ### manny is a dba_manager, so he should have all rights:
 su - manny
 sudo -i
@@ -315,24 +333,27 @@ sudo yum install tree (this should fail)
 sudo tail -f /var/log/messages (this should fail)
 ```
 
-17. On server1 create a tar w/gzip archive of /etc called etc_archive.tar.gz in the /archives directory.
+**17.** On server1 create a tar w/gzip archive of /etc called etc_archive.tar.gz in the /archives directory.
+
+#### **Solution to Task 17**
 ```
-Solution:
 dnf install -y tar gzip
 tar -czvf /archives/etc_archive.tar.gz /etc
 ```
 
-18. On server1 create a star w/bzip2 archive of /usr/share/doc called doc_archive.star.bz2 in the /archives directory.
+**18.** On server1 create a star w/bzip2 archive of /usr/share/doc called doc_archive.star.bz2 in the /archives directory.
+
+#### **Solution to Task 18**
 ```
-Solution:
 dnf install -y star --repo F37
 dnf install -y bzip2
 star -c -v -j file=/archives/doc_archive.star.bz2 /usr/share/doc
 ```
 
-19. On server1 create a folder called /links, and under links create a file called file01. Create a soft link called file02 pointing to file01, and a hard link called file03 pointing to file01. Check your work.
+**19.** On server1 create a folder called /links, and under links create a file called file01. Create a soft link called file02 pointing to file01, and a hard link called file03 pointing to file01. Check your work.
+
+#### **Solution to Task 19**
 ```
-Solution:
 mkdir /links
 touch /links/file01
 ln -s /links/file01 /links/file02
@@ -340,24 +361,27 @@ ln /links/file01 /links/file03
 ls -lai /links
 ```
 
-20. Find all setuid files on server1 and save the list to /root/suid.txt.
+**20.** Find all setuid files on server1 and save the list to /root/suid.txt.
+
+#### **Solution to Task 20**
 ```
-Solution:
-find / -perm -u+s > /root/suid.txt 2>/dev/null
+find / -type f -perm -u+s > /root/suid.txt
 cat suid.txt
 ```
 
-21. Find all files larger than 3MB in the /etc directory on server1 and copy them to /largefiles.
+**21.** Find all files larger than 3MB in the /etc directory on server1 and copy them to /largefiles.
+
+#### **Solution to Task 21**
 ```
-Solution:
 mkdir /largefiles
 find /etc -type f -size +3M -exec cp {} /largefiles \; 2>/dev/null
 ls -al /largefiles/
 ```
 
-22. On both servers persistently mount `/export/dba_files` from the server 192.168.55.47 under `/mnt/dba_files`. Ensure manny is the user owner and dba_staff is the group owner. Ensure the groupID is applied to newly created files. Ensure users can only delete files they have created. Ensure only members of the dba_staff group can access the directory.
+**22.** On both servers persistently mount `/export/dba_files` from the server 192.168.55.47 under `/mnt/dba_files`. Ensure manny is the user owner and dba_staff is the group owner. Ensure the groupID is applied to newly created files. Ensure users can only delete files they have created. Ensure only members of the dba_staff group can access the directory.
+
+#### **Solution to Task 22**
 ```
-Solution:
 mkdir /mnt/dba_files
 vi /etc/fstab
 
@@ -373,9 +397,10 @@ chmod 770 /mnt/dba_files
 chmod g+s,+t /mnt/dba_files
 ```
 
-23. On both servers persistently mount `/export/it_files` from the server 192.168.55.47 under `/mnt/it_files`. Ensure marcia is the user owner and it_staff is the group owner. Ensure the groupID is applied to newly created files. Ensure users can only delete files they have created. Ensure only members of the it_staff group can access the directory.
+**23.** On both servers persistently mount `/export/it_files` from the server 192.168.55.47 under `/mnt/it_files`. Ensure marcia is the user owner and it_staff is the group owner. Ensure the groupID is applied to newly created files. Ensure users can only delete files they have created. Ensure only members of the it_staff group can access the directory.
+
+#### **Solution to Task 23**
 ```
-Solution:
 mkdir /mnt/it_files
 vi /etc/fstab
 
@@ -391,9 +416,10 @@ chmod 770 /mnt/it_files
 chmod g+s,+t /mnt/it_files
 ```
 
-24. Create a job using `at` to write "This task was easy!" to /coolfiles/at_job.txt in 10 minutes.
+**24.** Create a job using `at` to write "This task was easy!" to /coolfiles/at_job.txt in 10 minutes.
+
+#### **Solution to Task 24**
 ```
-Solution:
 dnf install -y at
 systemctl enable --now atd
 
@@ -403,22 +429,23 @@ echo "This task was easy!" > /coolfiles/at_job.txt
 #Ctrl-d to exit
 ```
 
-25. Create a job using `cron` to write "Wow! I'm going to pass this test!" every Tuesday at 3pm to /var/log/messages.
+**25.** Create a job using `cron` to write "Wow! I'm going to pass this test!" every Tuesday at 3pm to /var/log/messages.
+
+#### **Solution to Task 25**
 ```
-Solution:
 vi /etc/crontab
 
 ### Add the following line to /etc/crontab
 0 15 * * 2 root echo "Wow! I'm going to pass this test!" >> /var/log/messages
 ```
 
-26. Write a script named awesome.sh in the root directory on server1.
+**26.** Write a script named awesome.sh in the root directory on server1.
     - a) If “me” is given as an argument, then the script should output “Yes, I’m awesome.”
     - b) If “them” is given as an argument, then the script should output “Okay, they are awesome.”
     - c) If the argument is empty or anything else is given, the script should output “Usage ./awesome.sh me|them”
 
+#### **Solution to Task 26**
 ```
-Solution:
 vi /awesome.sh
 ```
 Add the following to the file:
@@ -445,9 +472,9 @@ chmod +x /awesome.sh
 /awesome.sh
 ```
 
-27. Fix the web server on server1 and make sure all files are accessible. Do not make any changes to the web server configuration files. Ensure it's accessible from server2 and the client browser.
+**27.** Fix the web server on server1 and make sure all files are accessible. Do not make any changes to the web server configuration files. Ensure it's accessible from server2 and the client browser.
 
-Solution:\
+#### **Solution to Task 27**
 Ok, this is a long one. First, we need to check the web server and see what's going on:
 ```
 systemctl status httpd
@@ -596,35 +623,199 @@ firewall-cmd --add-port=82/tcp --permanent
 firewall-cmd --reload
 ```
 
-28. Put SELinux on server2 in permissive mode.
+**28.** Put SELinux on server2 in permissive mode.
+
+#### **Solution to Task 28**
 ```
-Solution:
 vi /etc/selinux/config
 
 ### Change the following line:
 SELINUX=permissive
 ```
 
-29. On server1, modify the bootloader with the following parameters:
+**29.** On server1, modify the bootloader with the following parameters:
 ```
 Increase the timeout using GRUB_TIMEOUT=10
 Add the following line: GRUB_TIMEOUT_STYLE=hidden
 Add quiet to the end of the GRUB_CMDLINE_LINUX line
 ```
 
-30. Configure NTP synchronization on both servers. Point them to us.pool.ntp.org.
+#### **Solution to Task 29**
+```
+vi /etc/default/grub
 
-31. Configure persistent journaling on both servers.
+### Add or edit the following lines:
+GRUB_TIMEOUT=10
+GRUB_TIMEOUT_STYLE=hidden
+GRUB_CMDLINE_LINUX  ### add quiet to the end
 
-32. On server2, create a new 2GiB volume group on /dev/sdb named "platforms_vg".
+### Write and quit the file
 
-33. Under the "platforms_vg" volume group, create a 500MiB logical volume name "platforms_lv" and format it as ext4.
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
+### Reboot and watch the boot from the console to verify
+systemctl reboot
+```
+
+**30.** Configure NTP synchronization on both servers. Point them to us.pool.ntp.org.
+
+#### **Solution to Task 30**
+```
+### On both servers:
+vi /etc/chrony.conf
+
+### Edit the following line (should be line 3):
+pool us.pool.ntp.org iburst
+
+### Write and quit, then restart the service:
+systemctl restart chronyd
+
+### Check the logs to ensure time is being pulled from the new source:
+journalctl -u chronyd
+
+### You should see a line similar to the following at the end:
+Feb 14 09:00:48 rhcsa9-server1 chronyd[705]: Selected source 73.61.36.59 (us.pool.ntp.org)
+```
+
+**31.** Configure persistent journaling on both servers.
+
+#### **Solution to Task 31**
+```
+### On both servers:
+mkdir /var/log/journal
+journalctl --flush
+ls -la /var/log/journal
+```
+
+**32.** On server2, create a new 2GiB volume group on /dev/sdb named "platforms_vg".
+
+#### **Solution to Task 32**
+First, create an LVM partition in fdisk:
+```
+### Enter fdisk
+fdisk /dev/sdb
+
+### n for new partition
+n
+
+### p for primary
+p
+
+### 1 for partition number
+1
+
+### Press enter to select the first available sector
+
+### +2G for setting the last sector as 2GiB past the first sector
++2G
+
+### t to change the partition type
+t
+
+### l to list all partition types
+l
+
+### 8e or lvm to select lvm (lvm is an alias for 8e)
+lvm
+
+### w to write and quit
+w
+```
+
+Then, create the volume group:
+```
+vgcreate platforms_vg /dev/sdb1
+```
+
+**33.** Under the "platforms_vg" volume group, create a 500MiB logical volume name "platforms_lv" and format it as ext4.
+
+#### **Solution to Task 33**
+```
+lvcreate -L 500M -n platforms_lv platforms_vg
+mkfs.ext4 /dev/mapper/platforms_vg-platforms_lv
+```
 
 34. Mount it persistently under /mnt/platforms_lv.
 
-35. Extend the "platforms_lv" volume and partition by 500MiB.
+#### **Solution to Task 34**
+```
+mkdir /mnt/platforms_lv
 
-36. On server2, create a 500MiB swap partition on /dev/sdb and mount it persistently.
+### use lsblk -f to get the UUID
+lsblk -f
+
+### Add the UUID to /etc/fstab with the mount point
+vi /etc/fstab
+
+UUID=<uuid_from_lsblk>  /mnt/platforms_lv  ext4  defaults  0 0
+
+### Write and quit, then mount all to check that it mounts properly
+mount -a
+mount
+```
+
+**35.** Extend the "platforms_lv" volume and partition by 500MiB.
+
+#### **Solution to Task 35**
+```
+### Run an lvextend including the -r switch to extend both the volume and filesystem
+lvextend -L +500M -r /dev/mapper/platforms_vg-platforms_lv
+```
+
+**36.** On server2, create a 500MiB swap partition on /dev/sdb and mount it persistently.
+
+#### **Solution to Task 35**
+First, create a swap partition in fdisk:
+```
+### Enter fdisk
+fdisk /dev/sdb
+
+### n for new partition
+n
+
+### p for primary
+p
+
+### 2 for partition number
+2
+
+### Press enter to select the first available sector
+
+### +500M for setting the last sector as 2GiB past the first sector
++500M
+
+### t to change the partition type
+t
+
+### l to list all partition types
+l
+
+### 82 or swap to select swap (swap is an alias for 82)
+swap
+
+### w to write and quit
+w
+```
+
+Next, create the swap on the new partition:
+```
+mkswap /dev/sdb2
+```
+
+Last, find the UUID and add it to /etc/fstab:
+```
+### use lsblk -f to get the UUID
+lsblk -f
+
+### Add the UUID to /etc/fstab with the mount point
+vi /etc/fstab
+
+UUID=<uuid_from_lsblk>  swap  swap  defaults  0 0
+
+### Write and quit, then activate all swap to check that it mounts properly
+swapon -a
+swapon
+```
 
 37. On server2, using the remaining space on /dev/sdb, create a volume group with the name networks_vg.
 
