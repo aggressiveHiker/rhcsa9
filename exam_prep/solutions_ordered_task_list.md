@@ -1,7 +1,5 @@
 # Solutions to Ordered Task List
-This file is still in progress...
-
-This shows all of the steps I took for completing each task while preparing for the exam.
+This guide shows all of the steps I took for completing each task while preparing for the exam.
 
 **1.** Break into server2 and set the password as `password`. Set the target as multi-user and make sure it boots into that automatically. Reboot to confirm.
 
@@ -952,7 +950,7 @@ mount -a
 mount
 ```
 
-40. On server1, set a merged tuned profile using the the powersave and virtual-guest profiles.
+**40.** On server1, set a merged tuned profile using the the powersave and virtual-guest profiles.
 
 #### **Solution to Task 40**
 ```
@@ -961,7 +959,7 @@ systemctl enable --now tuned
 tuned-adm profile powersave virtual-guest
 ```
 
-41. On server1, start one stress-ng process with the niceness value of 19. Adjust the niceness value of the stress process to 10. Kill the stress process.
+**41.** On server1, start one stress-ng process with the niceness value of 19. Adjust the niceness value of the stress process to 10. Kill the stress process.
 
 #### **Solution to Task 41**
 ```
@@ -977,66 +975,153 @@ q
 pkill stress-ng
 ```
 
-42. On server1, as the user `cindy`, create a container image from http://192.168.55.47/containers/Containerfile with the tag `cindy_web`.
+**42.** On server1, as the user `cindy`, create a container image from http://192.168.55.47/containers/Containerfile with the tag `web_image`.
 
 #### **Solution to Task 42**
-As root, enable cindy for linger
+As root, enable linger for cindy:
 ```
 loginctl enable-linger cindy
 ```
-Login separately as cindy. It needs to be a fresh login, do not use `su -`:
+Login separately as cindy. It needs to be a fresh login, do not use `su -`. Then build the image:
 ```
-podman build -t cindy_web http://192.168.55.47/containers/Containerfile
+podman build -t web_image http://192.168.55.47/containers/Containerfile
 ```
 
-43. From the newly created image, deploy a container as a service with the container name `cindy_web`. The web config files should map to ~/web_files, and the local port of 8000 should be mapped to the container's port 80. Create a default page that says "Welcome to Cindy's Web Server!". The service should be enabled and the website should be accessible.
+If we run a `podman images` now, we should see the newly created image:
+```
+podman images
+
+### Output:
+REPOSITORY                           TAG         IMAGE ID      CREATED       SIZE
+localhost/web_image                  latest      b14526ab4f3a  1 minute ago  243 MB
+registry.access.redhat.com/ubi9/ubi  latest      10acc174412e  9 days ago    219 MB
+```
+
+**43.** From the newly created image, deploy a container as a service with the container name `cindy_web`. The web config files should map to ~/web_files, and the local port of 8000 should be mapped to the container's port 80. Create a default page that says "Welcome to Cindy's Web Server!". The service should be enabled and the website should be accessible.
 
 #### **Solution to Task 43**
-```
-    7  mkdir web_files
-    8  ls -la
-    9  echo "Welcome to Cindy's Web Server!" > web_files/default.html
-   10  chmod -R o+r web_files/
-   11  ls -la
-   12  ls -la web_files/
-   13  podman images
-   14  podman run -d -p 8000:80 -v ~/web_files:/var/www/html:Z -n cindy_web localhost/cindy_web
-   15  man podman-run
-   16  podman run -d -p 8000:80 -v ~/web_files:/var/www/html:Z --name cindy_web localhost/cindy_web
-   17  podman ps
-   18  curl http://127.0.0.1:8000
-   19  ls
-   20  ls -laZ
-   21  curl http://127.0.0.1:8000/default.html
-   22  ls -la web_files/
-   23  chmod 644 web_files/default.html
-   24  ls -la web_files/
-   25  chmod 755 web_files/
-   26  ls -la
-   27  curl http://127.0.0.1:8000/default.html
-   28  podman ps
-   29  firewall-cmd --list-all
-   30  mv web_files/default.html web_files/index.html
-   31  man -k podman
-   32  man -k podman | less
-   33  mak podman-generate-systemd
-   34  man podman-generate-systemd
-   35  mkdir -p .config/systemd/user
-   36  cd .config/systemd/user
-   37  pwd
-   38  man podman-generate-systemd
-   39  podman generate systemd --files --name cindy_web --new
-   40  ls -la
-   41  cat container-cindy_web.service
-   42  podman ps
-   43  podman stop cindy_web
-   44  podman rm cindy_web
-   45  podman ps -a
-   46  systemctl --user enable --now container-cindy_web.service
-   47  podman ps
-   48  systemctl reboot
+First, login separately as cindy. It needs to be a fresh login, do not use `su -`.
 
+Now, let's go ahead and create the local directory for the web files and the default web page for our web server:
+```
+mkdir web_files
+echo "Welcome to Cindy's Web Server!" > web_files/index.html
+```
+
+Next, let's fix the general permissions on the directory and file, because otherwise it will be inaccessible (remember the umask change from task 4):
+```
+chmod 755 web_files
+chmod 644 web_files/index.html
+```
+
+Next, we can list the available images by doing `podman images`:
+```
+podman images
+
+### Output:
+REPOSITORY                           TAG         IMAGE ID      CREATED       SIZE
+localhost/web_image                  latest      b14526ab4f3a  1 minutes ago 243 MB
+registry.access.redhat.com/ubi9/ubi  latest      10acc174412e  9 days ago    219 MB
+```
+
+Now, let's go ahead and kick off a container that does everything. We're going to do the `podman run` command to spin it up, the `-d` switch to run it in detached mode, the `-p` switch to map our local port to our internal container port, the `-v` switch to map our local storage to our internal container storage, the `:Z` flag to create a custom SELinux label on the files, the `--name` switch to name the container, and finally specify the image we'll be running:
+```
+podman run -d -p 8000:80 -v ~/web_files:/var/www/html:Z --name cindy_web localhost/web_image
+```
+
+We can now see the running container by doing a `podman ps`:
+```
+podman ps
+
+### Output:
+CONTAINER ID  IMAGE                       COMMAND     CREATED        STATUS            PORTS                 NAMES
+fb89491cdf08  localhost/web_image:latest  /sbin/init  1 minutes ago  Up 1 minutes ago  0.0.0.0:8000->80/tcp  cindy_web
+```
+
+Ok, let's test and make sure we can reach it:
+```
+curl http://127.0.0.1:8000
+
+### Output:
+Welcome to Cindy's Web Server!
+```
+
+Now, let's build a service off the container. First we need to create the directory for the service files, and navigate to it:
+```
+mkdir -p .config/systemd/user
+cd .config/systemd/user
+```
+
+Next, we need to build the service files of the running container:
+```
+podman generate systemd --files --name cindy_web --new
+
+### Check and see the file created:
+ls -la
+
+### Output:
+drwxrwx---. 3 cindy cindy  69 Feb 15 19:35 .
+drwxrwx---. 3 cindy cindy  18 Feb 15 19:34 ..
+-rw-r--r--. 1 cindy cindy 792 Feb 15 19:35 container-cindy_web.service
+```
+
+Now, before we enable the service, we have to stop and remove the running container:
+```
+podman stop cindy_web
+podman rm cindy_web
+```
+
+Enable and start the service with the `--user` switch:
+```
+systemctl --user enable --now container-cindy_web.service
+```
+
+Now if we check again, we'll see the container running:
+```
+podman ps
+
+### Output:
+CONTAINER ID  IMAGE                       COMMAND     CREATED        STATUS            PORTS                 NAMES
+5bf2d72dbfa1  localhost/web_image:latest  /sbin/init  4 seconds ago  Up 5 seconds ago  0.0.0.0:8000->80/tcp  cindy_web
+```
+
+We can also check the status of the service:
+```
+systemctl --user status container-cindy_web
+
+### Output:
+● container-cindy_web.service - Podman container-cindy_web.service
+     Loaded: loaded (/home/cindy/.config/systemd/user/container-cindy_web.service; enabled; vendor preset: disabled)
+     Active: active (running) since Fri 2023-02-17 11:02:07 CET; 2min 38s ago
+       Docs: man:podman-generate-systemd(1)
+    Process: 1728 ExecStartPre=/bin/rm -f /run/user/1015/container-cindy_web.service.ctr-id (code=exited, status=0/SUCCESS)
+   Main PID: 1757 (conmon)
+      Tasks: 15 (limit: 11108)
+     Memory: 25.5M
+        CPU: 211ms
+     CGroup: /user.slice/user-1015.slice/user@1015.service/app.slice/container-cindy_web.service
+             ├─1741 /usr/bin/slirp4netns --disable-host-loopback --mtu=65520 --enable-sandbox --enable-seccomp --enable-ipv6 -c -e 3 >
+             ├─1743 rootlessport
+             ├─1749 rootlessport-child
+             └─1757 /usr/bin/conmon --api-version 1 -c 5bf2d72dbfa18ef8f250ff36775e2e8c4a6e79dbc418bf007e079fbeab540069 -u 5bf2d72dbf>
+
+Feb 17 11:02:07 rhcsa9-server1 systemd[915]: Starting Podman container-cindy_web.service...
+Feb 17 11:02:07 rhcsa9-server1 podman[1729]:
+Feb 17 11:02:07 rhcsa9-server1 podman[1729]: 2023-02-17 11:02:07.632856538 +0100 CET m=+0.112055029 container create 5bf2d72dbfa18ef8>
+Feb 17 11:02:07 rhcsa9-server1 podman[1729]: 2023-02-17 11:02:07.684918995 +0100 CET m=+0.164117448 container init 5bf2d72dbfa18ef8f2>
+Feb 17 11:02:07 rhcsa9-server1 systemd[915]: Started Podman container-cindy_web.service.
+Feb 17 11:02:07 rhcsa9-server1 podman[1729]: 2023-02-17 11:02:07.690819129 +0100 CET m=+0.170017582 container start 5bf2d72dbfa18ef8f>
+Feb 17 11:02:07 rhcsa9-server1 podman[1729]: 5bf2d72dbfa18ef8f250ff36775e2e8c4a6e79dbc418bf007e079fbeab540069
+Feb 17 11:02:07 rhcsa9-server1 podman[1729]: 2023-02-17 11:02:07.596761866 +0100 CET m=+0.075960345 image pull  localhost/web_image
+```
+
+Alright! Everything looks good!
+
+The last thing we need to do is to update the firewall (as root):
+```
 ### As root
 firewall-cmd --add-port=8000/tcp --permanent
 firewall-cmd --reload
 ```
+
+Congratulations!!! You're ready for your RHCSA 9 exam!
