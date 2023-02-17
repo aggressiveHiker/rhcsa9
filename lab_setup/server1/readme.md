@@ -13,7 +13,7 @@
 ```
 dnf install -y httpd
 
-vi /etc/httpd/conf/httpd.conf and change Listen 80 to Listen 82
+vi /etc/httpd/conf/httpd.conf and change Listen 80 to Listen 85
 
 echo "RHCSA is Awesome" > /var/www/html/file1
 

@@ -492,15 +492,15 @@ We see something similar to the following:
 
 Feb 08 14:03:47 rhcsa9-server1 systemd[1]: Starting The Apache HTTP Server...
 Feb 08 14:03:47 rhcsa9-server1 httpd[2935]: AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using fe80::a00:2>
-Feb 08 14:03:47 rhcsa9-server1 httpd[2935]: (13)Permission denied: AH00072: make_sock: could not bind to address [::]:82
-Feb 08 14:03:47 rhcsa9-server1 httpd[2935]: (13)Permission denied: AH00072: make_sock: could not bind to address 0.0.0.0:82
+Feb 08 14:03:47 rhcsa9-server1 httpd[2935]: (13)Permission denied: AH00072: make_sock: could not bind to address [::]:85
+Feb 08 14:03:47 rhcsa9-server1 httpd[2935]: (13)Permission denied: AH00072: make_sock: could not bind to address 0.0.0.0:85
 Feb 08 14:03:47 rhcsa9-server1 httpd[2935]: no listening sockets available, shutting down
 Feb 08 14:03:47 rhcsa9-server1 httpd[2935]: AH00015: Unable to open logs
 Feb 08 14:03:47 rhcsa9-server1 systemd[1]: httpd.service: Main process exited, code=exited, status=1/FAILURE
 Feb 08 14:03:47 rhcsa9-server1 systemd[1]: httpd.service: Failed with result 'exit-code'.
 Feb 08 14:03:47 rhcsa9-server1 systemd[1]: Failed to start The Apache HTTP Server.
 ```
-Ok, we can see here that the it had `(13)Permission denied`, and could not bind to port 82. So, we know the webserver is on port 82, and it's having a permissions issue. Port 82 is a reserved port, and SELinux isn't going to let us bind to that port. Let's get some tools installed to troubleshoot:
+Ok, we can see here that the it had `(13)Permission denied`, and could not bind to port 85. So, we know the webserver is on port 85, and it's having a permissions issue. Port 85 is a reserved port, and SELinux isn't going to let us bind to that port. Let's get some tools installed to troubleshoot:
 ```
 dnf install -y policycore* setrouble*
 ```
@@ -512,18 +512,18 @@ grep httpd /var/log/messages
 Oh man, look at all that gold...
 ```
 Feb  8 14:03:47 rhcsa9-server1 httpd[2935]: AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using fe80::a00:27ff:fe6b:9f4a%enp0s3. Set the 'ServerName' directive globally to suppress this message
-Feb  8 14:03:47 rhcsa9-server1 httpd[2935]: (13)Permission denied: AH00072: make_sock: could not bind to address [::]:82
-Feb  8 14:03:47 rhcsa9-server1 httpd[2935]: (13)Permission denied: AH00072: make_sock: could not bind to address 0.0.0.0:82
+Feb  8 14:03:47 rhcsa9-server1 httpd[2935]: (13)Permission denied: AH00072: make_sock: could not bind to address [::]:85
+Feb  8 14:03:47 rhcsa9-server1 httpd[2935]: (13)Permission denied: AH00072: make_sock: could not bind to address 0.0.0.0:85
 Feb  8 14:03:47 rhcsa9-server1 httpd[2935]: no listening sockets available, shutting down
 Feb  8 14:03:47 rhcsa9-server1 httpd[2935]: AH00015: Unable to open logs
 Feb  8 14:03:47 rhcsa9-server1 systemd[1]: httpd.service: Main process exited, code=exited, status=1/FAILURE
 Feb  8 14:03:47 rhcsa9-server1 systemd[1]: httpd.service: Failed with result 'exit-code'.
-Feb  8 14:03:50 rhcsa9-server1 setroubleshoot[2936]: SELinux is preventing /usr/sbin/httpd from name_bind access on the tcp_socket port 82. For complete SELinux messages run: sealert -l d28fbbf2-b7c7-4a6d-a677-7b498dc14c8c
-Feb  8 14:03:50 rhcsa9-server1 setroubleshoot[2936]: SELinux is preventing /usr/sbin/httpd from name_bind access on the tcp_socket port 82.#012#012*****  Plugin bind_ports (99.5 confidence) suggests   ************************#012#012If you want to allow /usr/sbin/httpd to bind to network port 82#012Then you need to modify the port type.#012Do#012# semanage port -a -t PORT_TYPE -p tcp 82#012    where PORT_TYPE is one of the following: http_cache_port_t, http_port_t, jboss_management_port_t, jboss_messaging_port_t, ntop_port_t, puppet_port_t.#012#012*****  Plugin catchall (1.49 confidence) suggests   **************************#012#012If you believe that httpd should be allowed name_bind access on the port 82 tcp_socket by default.#012Then you should report this as a bug.#012You can generate a local policy module to allow this access.#012Do#012allow this access for now by executing:#012# ausearch -c 'httpd' --raw | audit2allow -M my-httpd#012# semodule -X 300 -i my-httpd.pp#012
-Feb  8 14:03:52 rhcsa9-server1 setroubleshoot[2936]: SELinux is preventing /usr/sbin/httpd from name_bind access on the tcp_socket port 82. For complete SELinux messages run: sealert -l d28fbbf2-b7c7-4a6d-a677-7b498dc14c8c
-Feb  8 14:03:52 rhcsa9-server1 setroubleshoot[2936]: SELinux is preventing /usr/sbin/httpd from name_bind access on the tcp_socket port 82.#012#012*****  Plugin bind_ports (99.5 confidence) suggests   ************************#012#012If you want to allow /usr/sbin/httpd to bind to network port 82#012Then you need to modify the port type.#012Do#012# semanage port -a -t PORT_TYPE -p tcp 82#012    where PORT_TYPE is one of the following: http_cache_port_t, http_port_t, jboss_management_port_t, jboss_messaging_port_t, ntop_port_t, puppet_port_t.#012#012*****  Plugin catchall (1.49 confidence) suggests   **************************#012#012If you believe that httpd should be allowed name_bind access on the port 82 tcp_socket by default.#012Then you should report this as a bug.#012You can generate a local policy module to allow this access.#012Do#012allow this access for now by executing:#012# ausearch -c 'httpd' --raw | audit2allow -M my-httpd#012# semodule -X 300 -i my-httpd.pp#012
+Feb  8 14:03:50 rhcsa9-server1 setroubleshoot[2936]: SELinux is preventing /usr/sbin/httpd from name_bind access on the tcp_socket port 85. For complete SELinux messages run: sealert -l d28fbbf2-b7c7-4a6d-a677-7b498dc14c8c
+Feb  8 14:03:50 rhcsa9-server1 setroubleshoot[2936]: SELinux is preventing /usr/sbin/httpd from name_bind access on the tcp_socket port 85.#012#012*****  Plugin bind_ports (99.5 confidence) suggests   ************************#012#012If you want to allow /usr/sbin/httpd to bind to network port 85#012Then you need to modify the port type.#012Do#012# semanage port -a -t PORT_TYPE -p tcp 85#012    where PORT_TYPE is one of the following: http_cache_port_t, http_port_t, jboss_management_port_t, jboss_messaging_port_t, ntop_port_t, puppet_port_t.#012#012*****  Plugin catchall (1.49 confidence) suggests   **************************#012#012If you believe that httpd should be allowed name_bind access on the port 85 tcp_socket by default.#012Then you should report this as a bug.#012You can generate a local policy module to allow this access.#012Do#012allow this access for now by executing:#012# ausearch -c 'httpd' --raw | audit2allow -M my-httpd#012# semodule -X 300 -i my-httpd.pp#012
+Feb  8 14:03:52 rhcsa9-server1 setroubleshoot[2936]: SELinux is preventing /usr/sbin/httpd from name_bind access on the tcp_socket port 85. For complete SELinux messages run: sealert -l d28fbbf2-b7c7-4a6d-a677-7b498dc14c8c
+Feb  8 14:03:52 rhcsa9-server1 setroubleshoot[2936]: SELinux is preventing /usr/sbin/httpd from name_bind access on the tcp_socket port 85.#012#012*****  Plugin bind_ports (99.5 confidence) suggests   ************************#012#012If you want to allow /usr/sbin/httpd to bind to network port 85#012Then you need to modify the port type.#012Do#012# semanage port -a -t PORT_TYPE -p tcp 85#012    where PORT_TYPE is one of the following: http_cache_port_t, http_port_t, jboss_management_port_t, jboss_messaging_port_t, ntop_port_t, puppet_port_t.#012#012*****  Plugin catchall (1.49 confidence) suggests   **************************#012#012If you believe that httpd should be allowed name_bind access on the port 85 tcp_socket by default.#012Then you should report this as a bug.#012You can generate a local policy module to allow this access.#012Do#012allow this access for now by executing:#012# ausearch -c 'httpd' --raw | audit2allow -M my-httpd#012# semodule -X 300 -i my-httpd.pp#012
 ```
-If we read through all of that, we can see a couple of things going on there. First, it tells us that SELinux is preventing httpd from binding to the port, and then tells us if we want even more detail, we can run `sealert -l d28fbbf2-b7c7-4a6d-a677-7b498dc14c8c`. We don't need to do that, since there's enough info to get going with. Looking further down, it gives us a couple of suggestions on how to fix it. First, we can change the port type by running `semanage port -a -t PORT_TYPE -p tcp 82` and specifying the port type, *OR...* we can create a custom policy by running `ausearch -c 'httpd' --raw | audit2allow -M my-httpd` and then follow it with `semodule -X 300 -i my-httpd.pp`. We're going to choose the latter:
+If we read through all of that, we can see a couple of things going on there. First, it tells us that SELinux is preventing httpd from binding to the port, and then tells us if we want even more detail, we can run `sealert -l d28fbbf2-b7c7-4a6d-a677-7b498dc14c8c`. We don't need to do that, since there's enough info to get going with. Looking further down, it gives us a couple of suggestions on how to fix it. First, we can change the port type by running `semanage port -a -t PORT_TYPE -p tcp 85` and specifying the port type, *OR...* we can create a custom policy by running `ausearch -c 'httpd' --raw | audit2allow -M my-httpd` and then follow it with `semodule -X 300 -i my-httpd.pp`. We're going to choose the latter:
 ```
 ausearch -c 'httpd' --raw | audit2allow -M my-httpd
 semodule -X 300 -i my-httpd.pp
@@ -547,13 +547,13 @@ drwxr-xr-x. 4 root root  33 Feb  1 08:40 ..
 ```
 Okay, we have three files we need to hit here. Let's give it a shot:
 ```
-curl http://127.0.0.1:82/file1
+curl http://127.0.0.1:85/file1
 
 RHCSA is Awesome!
 ```
 So far, so good.
 ```
-curl http://127.0.0.1:82/file2
+curl http://127.0.0.1:85/file2
 
     February 2023
 Su Mo Tu We Th Fr Sa
@@ -565,7 +565,7 @@ Su Mo Tu We Th Fr Sa
 ```
 Still doing alright... Let's check the last one.
 ```
-curl http://127.0.0.1:82/file3
+curl http://127.0.0.1:85/file3
 
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <html><head>
@@ -613,13 +613,13 @@ drwxr-xr-x. 4 root root system_u:object_r:httpd_sys_content_t:s0      33 Feb  1 
 ```
 Alright, it's looking better! Now let's try to curl it:
 ```
-curl http://127.0.0.1:82/file3
+curl http://127.0.0.1:85/file3
 
 This file is totally messed up!
 ```
 Success!!! Alright, last thing is to fix the firewall so external clients can reach it:
 ```
-firewall-cmd --add-port=82/tcp --permanent
+firewall-cmd --add-port=85/tcp --permanent
 firewall-cmd --reload
 ```
 
@@ -954,8 +954,89 @@ mount
 
 40. On server1, set a merged tuned profile using the the powersave and virtual-guest profiles.
 
+#### **Solution to Task 40**
+```
+dnf install -y tuned
+systemctl enable --now tuned
+tuned-adm profile powersave virtual-guest
+```
+
 41. On server1, start one stress-ng process with the niceness value of 19. Adjust the niceness value of the stress process to 10. Kill the stress process.
+
+#### **Solution to Task 41**
+```
+dnf install -y stress-ng
+nice -n 19 stress-ng -c 1 &
+
+### Enter top and renice the process
+top
+r
+### Select the pid and enter 10
+q
+
+pkill stress-ng
+```
 
 42. On server1, as the user `cindy`, create a container image from http://192.168.55.47/containers/Containerfile with the tag `cindy_web`.
 
+#### **Solution to Task 42**
+As root, enable cindy for linger
+```
+loginctl enable-linger cindy
+```
+Login separately as cindy. It needs to be a fresh login, do not use `su -`:
+```
+podman build -t cindy_web http://192.168.55.47/containers/Containerfile
+```
+
 43. From the newly created image, deploy a container as a service with the container name `cindy_web`. The web config files should map to ~/web_files, and the local port of 8000 should be mapped to the container's port 80. Create a default page that says "Welcome to Cindy's Web Server!". The service should be enabled and the website should be accessible.
+
+#### **Solution to Task 43**
+```
+    7  mkdir web_files
+    8  ls -la
+    9  echo "Welcome to Cindy's Web Server!" > web_files/default.html
+   10  chmod -R o+r web_files/
+   11  ls -la
+   12  ls -la web_files/
+   13  podman images
+   14  podman run -d -p 8000:80 -v ~/web_files:/var/www/html:Z -n cindy_web localhost/cindy_web
+   15  man podman-run
+   16  podman run -d -p 8000:80 -v ~/web_files:/var/www/html:Z --name cindy_web localhost/cindy_web
+   17  podman ps
+   18  curl http://127.0.0.1:8000
+   19  ls
+   20  ls -laZ
+   21  curl http://127.0.0.1:8000/default.html
+   22  ls -la web_files/
+   23  chmod 644 web_files/default.html
+   24  ls -la web_files/
+   25  chmod 755 web_files/
+   26  ls -la
+   27  curl http://127.0.0.1:8000/default.html
+   28  podman ps
+   29  firewall-cmd --list-all
+   30  mv web_files/default.html web_files/index.html
+   31  man -k podman
+   32  man -k podman | less
+   33  mak podman-generate-systemd
+   34  man podman-generate-systemd
+   35  mkdir -p .config/systemd/user
+   36  cd .config/systemd/user
+   37  pwd
+   38  man podman-generate-systemd
+   39  podman generate systemd --files --name cindy_web --new
+   40  ls -la
+   41  cat container-cindy_web.service
+   42  podman ps
+   43  podman stop cindy_web
+   44  podman rm cindy_web
+   45  podman ps -a
+   46  systemctl --user enable --now container-cindy_web.service
+   47  podman ps
+   48  systemctl reboot
+
+### As root
+firewall-cmd --add-port=8000/tcp --permanent
+firewall-cmd --reload
+```
