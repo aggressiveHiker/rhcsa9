@@ -36,3 +36,6 @@ chown -R 1015:1015 /export/home/cindy
 
 ## 6. Restart NFS
 `systemctl restart nfs-server`
+
+## 7. Add firewall rules
+`firewall-cmd --permanent --add-service=nfs --add-service=mountd --add-service=rpc-bind`
