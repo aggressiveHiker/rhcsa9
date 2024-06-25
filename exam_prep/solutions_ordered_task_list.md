@@ -139,6 +139,9 @@ mkdir /mnt/autofs_home
 ### Create and add the following to /etc/auto.home:
 * 192.168.55.47:/export/home/&
 
+### Set SELinux boolean to allow for NFS home directories ###
+setsebool -P use_nfs_home_dirs on
+
 systemctl restart autofs
 ```
 
