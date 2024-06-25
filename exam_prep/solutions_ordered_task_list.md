@@ -112,7 +112,7 @@ gpgcheck=0
 [F37]
 name=Fedora 37
 enabled=0
-baseurl=https://download-ib01.fedoraproject.org/pub/fedora/linux/releases/37/Everything/x86_64/os/
+baseurl=https://archives.fedoraproject.org/pub/archive/fedora/linux/releases/37/Everything/x86_64/os/
 gpgcheck=0
 ```
 
